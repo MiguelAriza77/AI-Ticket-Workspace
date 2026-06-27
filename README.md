@@ -84,8 +84,37 @@ src/components/    los formularios y piezas de la interfaz
 
 La única parte con IA es la clasificación, en `src/lib/ai.ts`. Le mando a OpenAI
 el nombre del cliente y el texto de la solicitud, y le pido que responda en JSON
-con la categoría, la prioridad y un resumen corto. Antes de guardar compruebo
-que la respuesta sea válida, por si el modelo devuelve algo raro.
+con la categoría, la prioridad y un resumen corto.
+
+Le dediqué un rato al prompt porque de él depende que la clasificación sea
+consistente. Apliqué varias buenas prácticas de prompt engineering:
+
+- **Le doy un rol claro.** Empieza con "Eres un analista de soporte que clasifica
+  tickets", así el modelo se sitúa en el contexto correcto.
+- **Defino cada categoría.** No solo le digo los nombres (Finanzas, Legal,
+  Compras, Operaciones, Otro), sino qué entra en cada una. Eso evita que dude o
+  clasifique distinto el mismo tipo de ticket.
+- **Le doy una rúbrica para la prioridad.** Explico qué es Alta, Media y Baja
+  (si bloquea la operación, si hay un plazo, el impacto), en vez de dejarlo a su
+  criterio.
+- **Pongo reglas para evitar inventos.** Le digo que se base solo en el texto del
+  ticket y que, si algo es ambiguo, elija la opción más probable pero nunca deje
+  un campo vacío.
+- **Fijo el formato de salida.** Le pido un JSON con las claves y los valores
+  exactos, sin texto de más ni markdown, y además uso el modo JSON de la API.
+- **Le doy un ejemplo.** Un caso resuelto (few-shot) para anclar el formato y el
+  estilo del resumen.
+
+Aun así, no me fío del todo del modelo: antes de guardar valido la respuesta. Si
+devolviera una categoría o prioridad que no existe, la app cae a un valor seguro
+en vez de romperse. Y si la llamada falla por red, reintenta un par de veces.
+
+## Desarrollo con IA
+
+Me apoyé en **Claude Code** durante el desarrollo para ir más rápido: para montar
+la estructura inicial del proyecto, repasar el código, depurar algún problema y
+afinar el prompt de clasificación. Las decisiones de arquitectura y el diseño
+los fui tomando yo y revisando cada parte antes de darla por buena.
 
 ## Ver los datos en la base de datos
 
